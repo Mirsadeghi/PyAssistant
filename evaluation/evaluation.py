@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
+from scipy.optimize import linear_sum_assignment as linear_assignment
 
 def accuracy_ml(output, target, thr=.3):
     pred = (torch.nn.Sigmoid()(output)>thr).float()
@@ -52,3 +53,15 @@ def mAP(targs, preds):
         # compute average precision
         ap[k] = average_precision(scores, targets)
     return 100 * ap.mean(), 100*ap
+
+def hungarian_match(ious):
+
+  # num_correct is small
+  match = linear_assignment(1-ious)
+
+  # return as list of tuples, out_c to gt_c
+  res = []
+  for out_c, gt_c in match:
+    res.append((out_c, gt_c))
+
+  return res    
