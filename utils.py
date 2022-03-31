@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 def get_mem():
     t = torch.cuda.get_device_properties(0).total_memory
     c = torch.cuda.memory_reserved(0)
@@ -14,12 +15,18 @@ def torch2numpy(x):
     return x.detach().cpu().numpy()
 
 def isClass(data, dtype):
-    if str(type(data)).__contains__('str'):
+    name = str(type(data))
+    if name.__contains__('str'):
         dtype_= str
-    elif str(type(data)).__contains__('list'):
+    elif name.__contains__('list'):
         dtype_ = list
+    elif name.__contains__('numpy.ndarray'):
+        dtype_ = np.ndarray
+    elif name.__contains__('torch.Tensor'):
+        dtype_ = torch.Tensor
     else:
         dtype_ = None
+
     if dtype_ == dtype:
         return True
     else:

@@ -26,7 +26,7 @@ def lax(num_row, num_col, *img, flgHold=True, stacked=False, target_channel=0, o
 
     n = len(img)
 
-    if n < n1*n2:
+    if n > n1*n2:
         raise('Length of images is not consistent with the rows*cols')
     # if n == n1*n2:
     #     coef = 1
@@ -62,60 +62,65 @@ def lax(num_row, num_col, *img, flgHold=True, stacked=False, target_channel=0, o
     for i in range(num_row):
         for j in range(num_col):
             plot_index = i*num_col + j
-            img_k = img[plot_index]
-            
-            if isinstance(img_k[0], torch.Tensor):
-                img_k[0] = img_k[0].data.cpu().numpy()
-
-            if num_row == 1:
-                ax[j].imshow(img_k[0])
-                ax_ = ax[j]
-            elif num_col == 1:
-                ax[i].imshow(img_k[0])
-                ax_ = ax[i]
-            else:
-
-                if order=='horizontal':
-                    n1, n2 = j, i
+            if plot_index < n:
+                img_k = img[plot_index]
+                if isClass(img_k, list):
+                    if isinstance(img_k[0], torch.Tensor):
+                        img_k[0] = img_k[0].data.cpu().numpy()
                 else:
-                    n1, n2 = i, j
-                    
-                ax[n1, n2].imshow(img_k[0])
-                ax_ = ax[n1, n2]
+                    img_k = [img_k]
 
-
-            if len(img_k) > 2:
-                meta_order = img_k[2]
-            else:
-                meta_order = default_meta_order
-
-            for _i, meta_i in enumerate(meta_order):
-                if meta_i == 'title':
-                    ax_.set_title(img_k[1][_i])
-                
-                elif meta_i == 'box':
-                    for pts_i in box2poly(img_k[1][_i]):
-                        pts_i = np.array(pts_i)
-                        x, y = pts_i[:, 0], pts_i[:, 1]
-                        row, col = img_k[0].shape[0], img_k[0].shape[1]
-                        x = np.maximum(np.minimum(x, col-1), 0)
-                        y = np.maximum(np.minimum(y, row-1), 0)
-                        ax_.plot(x, y)
-                
-                elif meta_i == 'text':
-                    for txt in img_k[1][_i]:
-                        ax_.text(txt[0], txt[1], txt[2], bbox=dict(facecolor='red', alpha=0.5))
-                
-                elif meta_i == 'plot':
-                    for pts_i in box2poly(img_k[1][_i]):
-                        pts_i = np.array(pts_i)
-                        x, y = pts_i[:, 0], pts_i[:, 1]
-                        row, col = img_k[0].shape[0], img_k[0].shape[1]
-                        x = np.maximum(np.minimum(x, col-1), 0)
-                        y = np.maximum(np.minimum(y, row-1), 0)
-                        ax_.plot(x, y)
+                if num_row == 1:
+                    ax[j].imshow(img_k[0])
+                    ax_ = ax[j]
+                elif num_col == 1:
+                    ax[i].imshow(img_k[0])
+                    ax_ = ax[i]
                 else:
-                    raise('Undefined meta')
+                    if order=='horizontal':
+                        n1_, n2_ = j, i
+                    else:
+                        n1_, n2_ = i, j
+                        
+                    ax[n1_, n2_].imshow(img_k[0])
+                    ax_ = ax[n1_, n2_]
+
+                if len(img_k) > 1:
+                    if len(img_k) > 2:
+                        meta_order = img_k[2]
+                    else:
+                        meta_order = default_meta_order
+                else:
+                    meta_order = [None]
+
+                for _i, meta_i in enumerate(meta_order):
+                    if meta_i is not None:
+                        if meta_i == 'title':
+                            ax_.set_title(img_k[1][_i])
+                        
+                        elif meta_i == 'box':
+                            for pts_i in box2poly(img_k[1][_i]):
+                                pts_i = np.array(pts_i)
+                                x, y = pts_i[:, 0], pts_i[:, 1]
+                                row, col = img_k[0].shape[0], img_k[0].shape[1]
+                                x = np.maximum(np.minimum(x, col-1), 0)
+                                y = np.maximum(np.minimum(y, row-1), 0)
+                                ax_.plot(x, y)
+                        
+                        elif meta_i == 'text':
+                            for txt in img_k[1][_i]:
+                                ax_.text(txt[0], txt[1], txt[2], bbox=dict(facecolor='red', alpha=0.5))
+                        
+                        elif meta_i == 'plot':
+                            for pts_i in box2poly(img_k[1][_i]):
+                                pts_i = np.array(pts_i)
+                                x, y = pts_i[:, 0], pts_i[:, 1]
+                                row, col = img_k[0].shape[0], img_k[0].shape[1]
+                                x = np.maximum(np.minimum(x, col-1), 0)
+                                y = np.maximum(np.minimum(y, row-1), 0)
+                                ax_.plot(x, y)
+                        else:
+                            raise('Undefined meta')
                 
     # else:   
     #     if isinstance(img[0], torch.Tensor):

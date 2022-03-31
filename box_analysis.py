@@ -56,19 +56,21 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
     else:
         return iou  # IoU
 
-def find_pair_boxes(BB, BBGT, ovthresh=.25):
+def find_pair_boxes(BB, BBGT, ovthresh=.5, multi_pair=False):
+    
     confidence = BB[:, 4]
     BB = BB[:, 0:4]
+    
     # sort by confidence
     sorted_ind = np.argsort(-confidence)
     BB = BB[sorted_ind, :]
 
     n = BBGT.shape[0]
     m = BB.shape[0]
+    
     isUsed = np.zeros(n).astype('bool')
-    # tp = np.zeros(m)
-    # fp = np.zeros(m)
     gt_pair = np.zeros(m)-1
+
     for d, bb in enumerate(BB):
         ixmin = np.maximum(BBGT[:, 0], bb[0])
         iymin = np.maximum(BBGT[:, 1], bb[1])
@@ -90,14 +92,12 @@ def find_pair_boxes(BB, BBGT, ovthresh=.25):
         jmax = np.argmax(overlaps)
 
         if ovmax > ovthresh:
-            if not isUsed[jmax]:
-                # tp[d] = 1.0
+            if not multi_pair:
+                if not isUsed[jmax]:
+                    gt_pair[d] = jmax
+                    isUsed[jmax] = 1
+            else:
                 gt_pair[d] = jmax
-                isUsed[jmax] = 1
-        #     else:
-        #         fp[d] = 1.0
-        # else:
-        #     fp[d] = 1.0
     return gt_pair
     '''
     ious = []
